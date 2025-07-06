@@ -53,17 +53,16 @@ type MergeRange struct {
 
 type StyleConfig map[string]int
 
-func NewStreamHelper(file *excelize.File, sheet string, styleConfig map[string]int) (*StreamHelper, error) {
+func NewStreamHelper(file *excelize.File, sheet string) (*StreamHelper, error) {
 	writer, err := file.NewStreamWriter(sheet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stream writer: %w", err)
 	}
 
 	return &StreamHelper{
-		File:        file,
-		Writer:      writer,
-		Sheet:       sheet,
-		StyleConfig: styleConfig,
+		File:   file,
+		Writer: writer,
+		Sheet:  sheet,
 	}, nil
 }
 
@@ -91,7 +90,7 @@ func (sh *StreamHelper) MergeCells(ranges []MergeRange) error {
 	return nil
 }
 
-func (sh *StreamHelper) SetColumnStyles(configs []ColumnStyleConfig) error {
+func (sh *StreamHelper) SetColumnStyles(configs []ColumnStyleConfig, styleConfig map[string]int) error {
 	mustSet := func(colStart, colEnd, style int) error {
 		if err := sh.Writer.SetColStyle(colStart, colEnd, style); err != nil {
 			return fmt.Errorf("failed to set column style %d:%d to style %d: %v", colStart, colEnd, style, err)
@@ -100,7 +99,7 @@ func (sh *StreamHelper) SetColumnStyles(configs []ColumnStyleConfig) error {
 	}
 
 	for _, config := range configs {
-		styleID, exists := sh.StyleConfig[config.Style]
+		styleID, exists := styleConfig[config.Style]
 		if !exists {
 			return fmt.Errorf("style ID for column %d not found in style config", config.Style)
 		}
